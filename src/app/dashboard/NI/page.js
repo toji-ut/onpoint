@@ -25,16 +25,12 @@ const CreateTicket = () => {
         const { data, error } = await supabase
           .from('users')
           .select('id, email');
-        
         if (error) throw error;
-
         setUsers(data);
       } catch (err) {
         setError('Error fetching users.');
-        console.error(err);
       }
     };
-
     fetchUsers();
   }, []);
 
@@ -45,7 +41,6 @@ const CreateTicket = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       setLoading(true);
       const { error } = await supabase
@@ -62,14 +57,11 @@ const CreateTicket = () => {
             updated_at: new Date().toISOString(),
           },
         ]);
-
       if (error) throw error;
-
       setLoading(false);
-      router.push('/dashboard'); // Redirect to dashboard after successful creation
+      router.push('/dashboard');
     } catch (err) {
       setError('Error creating ticket.');
-      console.error(err);
       setLoading(false);
     }
   };
@@ -79,9 +71,7 @@ const CreateTicket = () => {
   return (
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Create New Ticket</h2>
-
       {error && <p className="text-red-500">{error}</p>}
-
       <form onSubmit={handleSubmit} className="grid gap-4">
         <div>
           <label className="block font-medium mb-2">Title</label>
@@ -94,7 +84,6 @@ const CreateTicket = () => {
             className="w-full border border-gray-300 rounded p-2"
           />
         </div>
-
         <div>
           <label className="block font-medium mb-2">Description</label>
           <textarea
@@ -105,7 +94,6 @@ const CreateTicket = () => {
             className="w-full border border-gray-300 rounded p-2"
           />
         </div>
-
         <div>
           <label className="block font-medium mb-2">Status</label>
           <select
@@ -119,7 +107,6 @@ const CreateTicket = () => {
             <option value="resolved">Resolved</option>
           </select>
         </div>
-
         <div>
           <label className="block font-medium mb-2">Priority</label>
           <select
@@ -133,7 +120,6 @@ const CreateTicket = () => {
             <option value="high">High</option>
           </select>
         </div>
-
         <div>
           <label className="block font-medium mb-2">Assigned</label>
           <select
@@ -150,7 +136,6 @@ const CreateTicket = () => {
             ))}
           </select>
         </div>
-
         <div>
           <label className="block font-medium mb-2">User</label>
           <select
@@ -167,7 +152,6 @@ const CreateTicket = () => {
             ))}
           </select>
         </div>
-
         <button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded"

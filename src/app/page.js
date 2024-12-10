@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabaseClient"; // Ensure your Supabase client is set up correctly
+import { supabase } from "../../lib/supabaseClient";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,41 +12,28 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate that email and password are provided
     if (!email || !password) {
       setError("Please enter both email and password.");
       return;
     }
-
-    setError(""); // Reset any previous errors
+    setError("");
     try {
-      // Use Supabase's sign-in method directly
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
       if (authError) {
         setError("Error during authentication: " + authError.message);
-        console.error(authError.message);
         return;
       }
-
       if (!data?.user) {
         setError("User not found");
-        console.error("User object not returned:", data);
         return;
       }
-
-      // Store user data in localStorage (optional, for use in other parts of the app)
       localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to the dashboard if login is successful
       router.push('/dashboard');
     } catch (err) {
       setError("An error occurred. Please try again.");
-      console.error("Sign-in error:", err);
     }
   };
 
@@ -54,9 +41,7 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-indigo-800">
       <div className="w-full max-w-md p-8 bg-opacity-30 backdrop-blur-md shadow-xl rounded-md">
         <h2 className="text-3xl font-bold text-center text-white mb-6">Welcome Back</h2>
-
         {error && <div className="text-red-500 text-center mb-4">{error}</div>}
-
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label htmlFor="email" className="block text-sm font-semibold text-white">
@@ -71,7 +56,6 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-semibold text-white">
               Password
@@ -85,7 +69,6 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-
           <button
             type="submit"
             className="w-full py-3 text-lg font-semibold text-white bg-gradient-to-r from-pink-500 to-purple-600 rounded-md hover:bg-gradient-to-l focus:outline-none focus:ring-2 focus:ring-blue-500"

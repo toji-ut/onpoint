@@ -8,22 +8,20 @@ const TicketList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userRole, setUserRole] = useState(null); // Store user role
+  const [userRole, setUserRole] = useState(null);
+  const [searchValue, setSearchValue] = useState('');
   const router = useRouter();
 
   useEffect(() => {
     const checkUserAndFetchTickets = async () => {
-      // Check if user is in localStorage
       const user = JSON.parse(localStorage.getItem('user'));
 
       if (!user) {
-        // If no user is found, redirect to the login page
         router.push('/');
         return;
       }
 
       try {
-        // Fetch the user role (assuming the role is stored in the user table)
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('role')
@@ -32,9 +30,8 @@ const TicketList = () => {
 
         if (userError) throw userError;
 
-        setUserRole(userData.role); // Set the user role
+        setUserRole(userData.role);
 
-        // Fetch tickets where status is "open"
         const { data, error } = await supabase
           .from('tickets')
           .select('*')
@@ -42,7 +39,7 @@ const TicketList = () => {
 
         if (error) throw error;
 
-        setTickets(data); // Save the tickets to the state
+        setTickets(data);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching tickets:", err);
@@ -52,14 +49,35 @@ const TicketList = () => {
     };
 
     checkUserAndFetchTickets();
-  }, [router]); // Run this on component mount
+  }, [router]);
+
+  const handleSearch = async () => {
+    if (!searchValue.trim()) return;
+
+    try {
+      const { data: ticket, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('id', searchValue.trim())
+        .single();
+
+      if (error || !ticket) {
+        alert('Ticket not found.');
+        return;
+      }
+
+      window.open(`/dashboard/tickets/${ticket.id}`, '_blank');
+    } catch (err) {
+      alert('Error searching for ticket.');
+      console.error("Error searching for ticket:", err);
+    }
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <div className="p-4">
-      
       {userRole === 'admin' && (
         <button
           onClick={() => router.push('/dashboard/users')}
@@ -68,8 +86,22 @@ const TicketList = () => {
           Manage Users
         </button>
       )}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search by Ticket ID"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          className="border border-gray-300 rounded p-2 mr-2"
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-white text-black px-4 py-2 rounded border border-black hover:bg-gray-100"
+        >
+          Search
+        </button>
 
-    <h2 className="text-xl font-semibold mb-4">Open Tickets</h2>    
+      </div>
       {tickets && tickets.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto border-collapse border border-gray-200">

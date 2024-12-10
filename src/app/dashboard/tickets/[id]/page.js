@@ -22,12 +22,11 @@ const TicketDetails = () => {
     updated_at: '',
   });
 
-  const [users, setUsers] = useState([]); // To store user data for dropdowns
+  const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch ticket details
         const { data: ticketData, error: ticketError } = await supabase
           .from('tickets')
           .select('*')
@@ -43,12 +42,11 @@ const TicketDetails = () => {
           description: ticketData.description,
           status: ticketData.status,
           priority: ticketData.priority,
-          assigned: ticketData.assigned, // assuming this is a user_id
-          user_id: ticketData.user_id,  // assuming this is a user_id
+          assigned: ticketData.assigned,
+          user_id: ticketData.user_id,
           updated_at: new Date().toISOString(),
         });
 
-        // Fetch users
         const { data: usersData, error: usersError } = await supabase
           .from('users')
           .select('id, email');
@@ -58,7 +56,6 @@ const TicketDetails = () => {
         setUsers(usersData);
         setLoading(false);
       } catch (err) {
-        console.error('Error fetching data:', err);
         setError('Error fetching ticket or user data.');
         setLoading(false);
       }
@@ -85,9 +82,8 @@ const TicketDetails = () => {
       if (error) throw error;
 
       setTicket({ ...ticket, ...formData });
-      setEditMode(false); // Exit edit mode
+      setEditMode(false);
     } catch (err) {
-      console.error('Error updating ticket:', err);
       setError('Error updating ticket.');
     }
   };
@@ -191,22 +187,58 @@ const TicketDetails = () => {
           </button>
         </div>
       ) : (
-        <div>
-          <p><strong>Title:</strong> {ticket.title}</p>
-          <p><strong>Description:</strong> {ticket.description}</p>
-          <p><strong>Status:</strong> {ticket.status}</p>
-          <p><strong>Priority:</strong> {ticket.priority}</p>
-          <p><strong>Assigned:</strong> {users.find((user) => user.id === ticket.assigned)?.email || 'Unknown'}</p>
-          <p><strong>User:</strong> {users.find((user) => user.id === ticket.user_id)?.email || 'Unknown'}</p>
-          <p><strong>Created At:</strong> {new Date(ticket.created_at).toLocaleString()}</p>
-          <p><strong>Updated At:</strong> {new Date(ticket.updated_at).toLocaleString()}</p>
-          <button
-            onClick={() => setEditMode(true)}
-            className="bg-white text-black px-4 py-2 border border-black rounded mt-4"
-          >
-            Edit Ticket
-          </button>
-        </div>
+        <table className="table-auto w-full border-collapse border border-gray-300">
+          <tbody>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Title</td>
+              <td className="border border-gray-300 px-4 py-2">{ticket.title}</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Description</td>
+              <td className="border border-gray-300 px-4 py-2">{ticket.description}</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Status</td>
+              <td className="border border-gray-300 px-4 py-2">{ticket.status}</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Priority</td>
+              <td className="border border-gray-300 px-4 py-2">{ticket.priority}</td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Assigned</td>
+              <td className="border border-gray-300 px-4 py-2">
+                {users.find((user) => user.id === ticket.assigned)?.email || 'Unknown'}
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">User</td>
+              <td className="border border-gray-300 px-4 py-2">
+                {users.find((user) => user.id === ticket.user_id)?.email || 'Unknown'}
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Created At</td>
+              <td className="border border-gray-300 px-4 py-2">
+                {new Date(ticket.created_at).toLocaleString()}
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-gray-300 px-4 py-2 font-medium">Updated At</td>
+              <td className="border border-gray-300 px-4 py-2">
+                {new Date(ticket.updated_at).toLocaleString()}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+      {!editMode && (
+        <button
+          onClick={() => setEditMode(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+        >
+          Edit Ticket
+        </button>
       )}
     </div>
   );
