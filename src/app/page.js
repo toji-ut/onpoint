@@ -1,22 +1,52 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabaseClient"; // Ensure your Supabase client is set up correctly
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isMounted, setIsMounted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (username === 'admin' && password === 'password') {
-      window.location.href = '/dashboard'; // this is for testing purposes, 
-      //should redirect after the username and the password are confirmed through the db
-    } else {
-      setError('Invalid username or password');
+    // Validate that email and password are provided
+    if (!email || !password) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
+    setError(""); // Reset any previous errors
+    try {
+      // Use Supabase's sign-in method directly
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) {
+        setError("Error during authentication: " + authError.message);
+        console.error(authError.message);
+        return;
+      }
+
+      if (!data?.user) {
+        setError("User not found");
+        console.error("User object not returned:", data);
+        return;
+      }
+
+      // Store user data in localStorage (optional, for use in other parts of the app)
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect to the dashboard if login is successful
+      router.push('/dashboard');
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+      console.error("Sign-in error:", err);
     }
   };
 
@@ -29,16 +59,16 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="mb-6">
-            <label htmlFor="username" className="block text-sm font-semibold text-white">
-              Username
+            <label htmlFor="email" className="block text-sm font-semibold text-white">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
+              id="email"
+              type="email"
               className="w-full px-6 py-3 mt-2 text-lg rounded-md bg-white bg-opacity-50 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
 
@@ -63,13 +93,6 @@ export default function Login() {
             Log In
           </button>
         </form>
-
-        <p className="mt-4 text-center text-sm text-white">
-          Don't have an account?{' '}
-          <a href="#" className="text-blue-500 hover:underline">
-            Sign Up
-          </a>
-        </p>
       </div>
     </div>
   );

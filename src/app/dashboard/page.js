@@ -1,64 +1,102 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-// import { supabase } from '../lib/supabase'; 
-export default function TicketsPage() {
+import { supabase } from '../../../lib/supabaseClient';
+import { useRouter } from 'next/navigation';
+
+const TicketList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
-//chatgpt generated, i havent gotten this far yet
   useEffect(() => {
-    const fetchTickets = async () => {
+    const checkUserAndFetchTickets = async () => {
+      // Check if user is in localStorage
+      const user = JSON.parse(localStorage.getItem('user'));
+
+      if (!user) {
+        // If no user is found, redirect to the login page
+        router.push('/');
+        return;
+      }
+
       try {
-        const { data, error } = await supabase.from('tickets').select('*');
-        if (error) {
-          console.error('Error fetching tickets:', error);
-        } else {
-          setTickets(data);
-        }
-      } catch (error) {
-        console.error('Unexpected error:', error);
-      } finally {
+        // Fetch tickets where status is "open"
+        const { data, error } = await supabase
+          .from('tickets')
+          .select('*')
+          .eq('status', 'open'); // Adjust 'open' to match your database's status value for open tickets
+
+        if (error) throw error;
+
+        setTickets(data); // Save the tickets to the state
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching tickets:", err);
+        setError("Error fetching tickets.");
         setLoading(false);
       }
     };
 
-    fetchTickets();
-  }, []);
+    checkUserAndFetchTickets();
+  }, [router]); // Run this on component mount
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Tickets</h1>
-      {loading ? (
-        <p>Loading tickets...</p>
-      ) : tickets.length === 0 ? (
-        <p>No tickets found.</p>
-      ) : (
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Open Tickets</h2>
+      {tickets && tickets.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="table-auto w-full bg-white shadow-md rounded-lg">
+          <table className="min-w-full table-auto border-collapse border border-gray-200">
             <thead>
-              <tr className="bg-gray-200">
-                <th className="px-4 py-2 text-left">ID</th>
-                <th className="px-4 py-2 text-left">Title</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Created At</th>
+              <tr className="bg-gray-100">
+                <th className="px-4 py-2 border border-gray-300 text-left">ID</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Title</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Description</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Priority</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Status</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Created At</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Last Updated</th>
+                <th className="px-4 py-2 border border-gray-300 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
               {tickets.map((ticket) => (
-                <tr key={ticket.id} className="border-t">
-                  <td className="px-4 py-2">{ticket.id}</td>
-                  <td className="px-4 py-2">{ticket.title}</td>
-                  <td className="px-4 py-2">{ticket.status}</td>
-                  <td className="px-4 py-2">
-                    {new Date(ticket.created_at).toLocaleDateString()}
+                <tr key={ticket.id} className="border-b border-gray-200">
+                  <td className="px-4 py-2 border border-gray-300">{ticket.id}</td>
+                  <td className="px-4 py-2 border border-gray-300">{ticket.title}</td>
+                  <td className="px-4 py-2 border border-gray-300">{ticket.description}</td>
+                  <td className="px-4 py-2 border border-gray-300">{ticket.priority}</td>
+                  <td className="px-4 py-2 border border-gray-300">{ticket.status}</td>
+                  <td className="px-4 py-2 border border-gray-300">
+                    {new Date(ticket.created_at).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-2 border border-gray-300">
+                    {ticket.updated_at
+                      ? new Date(ticket.updated_at).toLocaleString()
+                      : 'Not Updated'}
+                  </td>
+                  <td className="px-4 py-2 border border-gray-300">
+                    <button
+                      onClick={() => window.open(`/dashboard/tickets/${ticket.id}`, '_blank')}
+                      className="bg-white text-black px-2 py-1 rounded border border-black hover:bg-gray-100"
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      ) : (
+        <p>No open tickets found</p>
       )}
     </div>
   );
-}
+};
+
+export default TicketList;

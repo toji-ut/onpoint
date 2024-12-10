@@ -12,9 +12,8 @@ export default function RootLayout({ children }) {
         <link rel="icon" type="image/x-icon" href="/onpoint.png" />
       </head>
       <body className="dark text-foreground bg-background">
-      <div className="w-full">
-      </div>
-          <main className="main">{children}</main>
+
+          <main className="p-20">{children}</main>
       </body>
     </html>
   );
