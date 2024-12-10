@@ -8,6 +8,7 @@ const TicketList = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userRole, setUserRole] = useState(null); // Store user role
   const router = useRouter();
 
   useEffect(() => {
@@ -22,11 +23,22 @@ const TicketList = () => {
       }
 
       try {
+        // Fetch the user role (assuming the role is stored in the user table)
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) throw userError;
+
+        setUserRole(userData.role); // Set the user role
+
         // Fetch tickets where status is "open"
         const { data, error } = await supabase
           .from('tickets')
           .select('*')
-          .eq('status', 'open'); // Adjust 'open' to match your database's status value for open tickets
+          .eq('status', 'open');
 
         if (error) throw error;
 
@@ -47,7 +59,17 @@ const TicketList = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Open Tickets</h2>
+      
+      {userRole === 'admin' && (
+        <button
+          onClick={() => router.push('/dashboard/users')}
+          className="bg-white text-black px-6 py-3 rounded-lg border-2 border-black mb-4 hover:bg-gray-100 transition duration-300 mb-10"
+        >
+          Manage Users
+        </button>
+      )}
+
+    <h2 className="text-xl font-semibold mb-4">Open Tickets</h2>    
       {tickets && tickets.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="min-w-full table-auto border-collapse border border-gray-200">
